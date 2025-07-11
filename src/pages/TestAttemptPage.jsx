@@ -4,6 +4,7 @@ import api from '../api/axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as faceapi from 'face-api.js';
 import * as tf from '@tensorflow/tfjs';
+import axios from 'axios';
 
 
 
@@ -167,16 +168,48 @@ useEffect(() => {
 };
 
 
+const runCode = async () => {
+  setOutput('Running...');
 
-
-
-  const runCode = () => {
-    setOutput('Running...');
-    setTimeout(() => {
-      const simulatedOutput = `Language: ${language}\nOutput:\n${code.split('').reverse().join('')}`;
-      setOutput(simulatedOutput);
-    }, 1000);
+  const languageMap = {
+    javascript: 63, // Node.js
+    python: 71,     // Python 3
+    cpp: 54         // C++ (GCC)
   };
+
+  try {
+    const response = await axios.post(
+      "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true",
+      {
+        source_code: code,
+        language_id: languageMap[language],
+        stdin: ""
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-RapidAPI-Key": "6ed0ac5729mshcb9e9918036ac98p1930cfjsn01de8e7a5965",
+          "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com"
+        }
+      }
+    );
+
+    const result = response.data;
+    const out =
+      result.stdout || result.compile_output || result.stderr || "⚠️ No output";
+    setOutput(out);
+  } catch (err) {
+    console.error(err);
+    setOutput("❌ Execution failed. Please check your code and try again.");
+  }
+};
+
+
+
+
+
+
+
 
   const renderQuestion = () => {
     if (!testData) return null;
@@ -341,46 +374,55 @@ useEffect(() => {
 
           {/* Compiler Panel */}
           {showCompiler && (
-                <div className="mb-3 flex-grow-1">
-                  <div className="card shadow-sm h-100">
-                    <div className="card-header py-2" style={{ backgroundColor: '#9370DB', color: 'white', }}>
-                      Compiler
-                    </div>
-                    <div className="card-body">
-                      <select
-                        className="form-select form-select-sm mb-2"
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                      >
-                        <option value="javascript">JavaScript</option>
-                        <option value="python">Python</option>
-                        <option value="cpp">C++</option>
-                      </select>
-                      <textarea
-                        className="form-control mb-2"
-                        rows="5"
-                        placeholder="Write your code here..."
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        style={{ fontSize: '0.8rem' }}
-                      ></textarea>
-                      <button 
-                        className="btn btn-sm w-100 mb-2" 
-                        onClick={runCode}
-                        style={{ backgroundColor: '#9370DB', color: 'white' ,}}
-                      >
-                        Run Code
-                      </button>
-                      {output && (
-                        <pre className="p-2 bg-dark text-success rounded overflow-auto" 
-                             style={{ maxHeight: '100px', fontSize: '0.8rem' }}>
-                          {output}
-                        </pre>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+  <div className="mb-3 flex-grow-1">
+    <div className="card shadow-sm h-100">
+      <div
+        className="card-header py-2"
+        style={{ backgroundColor: '#9370DB', color: 'white' }}
+      >
+        Compiler
+      </div>
+      <div className="card-body">
+        <select
+          className="form-select form-select-sm mb-2"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="cpp">C++</option>
+        </select>
+
+        <textarea
+          className="form-control mb-2"
+          rows="5"
+          placeholder="Write your code here..."
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          style={{ fontSize: '0.8rem' }}
+        ></textarea>
+
+        <button
+          className="btn btn-sm w-100 mb-2"
+          onClick={runCode}
+          style={{ backgroundColor: '#9370DB', color: 'white' }}
+        >
+          Run Code
+        </button>
+
+        {output && (
+          <pre
+            className="p-2 bg-dark text-success rounded overflow-auto"
+            style={{ maxHeight: '120px', fontSize: '0.8rem' }}
+          >
+            {output}
+          </pre>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
             </div>
           </div>
         </div>
