@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     setMessage('');
     setError('');
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/forgot-password', { email });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
       setMessage('OTP sent to your email');
       setTimeout(() => {
         navigate('/verify-otp-reset', { state: { userId: res.data.userId } });
