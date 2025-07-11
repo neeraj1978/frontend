@@ -34,7 +34,7 @@ export default function VerifyOtp() {
     setSuccessMsg('');
     try {
       const otpValue = otp.join('');
-      await axios.post('http://localhost:5001/api/auth/verify-otp', {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         userId: String(userId),
         otp: otpValue,
       });
